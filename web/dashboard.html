@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regatta Screen — Wedstrijden</title>
+  <link rel="stylesheet" href="css/shared.css" />
+  <style>
+    .dashboard {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px 80px;
+      width: 100%;
+    }
+
+    .dashboard h2 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .dashboard .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: 0 2px 12px rgba(0,10,30,0.04);
+    }
+
+    .stat-card .stat-val {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-card .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .race-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .race-list-header .card-title { margin: 0; }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .filter-bar .input {
+      width: 200px;
+      max-width: 100%;
+      padding: 7px 12px;
+      font-size: 13px;
+    }
+
+    .race-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+      gap: 16px;
+    }
+    .race-item:hover {
+      background: color-mix(in oklch, var(--border), transparent 70%);
+      margin: 0 -14px;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+    }
+    .race-item:last-child { border-bottom: none; }
+
+    .race-item .race-info { flex: 1; min-width: 0; }
+    .race-item .race-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .race-item .race-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .race-item .race-stats {
+      display: flex;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .race-item .race-stat { text-align: right; }
+    .race-item .race-stat .val {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .race-item .race-stat .lbl {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .race-item .race-arrow {
+      color: var(--muted);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: var(--fg); }
+    .empty-state p { font-size: 14px; max-width: 360px; margin: 0 auto; }
+
+    .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .loading-state .spinner {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-state p { font-size: 14px; }
+
+    /* ── Enhanced mobile ── */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 200;
+      padding: 6px 0 env(safe-area-inset-bottom, 6px) 0;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .mobile-nav-inner {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .mobile-nav a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 12px;
+      font-size: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      transition: color 0.15s;
+      min-width: 56px;
+    }
+    .mobile-nav a.active {
+      color: var(--accent);
+    }
+    .mobile-nav a svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    @media (max-width: 640px) {
+      .dashboard { padding: 16px 14px 80px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .race-item { flex-wrap: wrap; }
+      .race-item .race-stats { width: 100%; justify-content: space-around; margin-top: 6px; }
+      .race-item .race-arrow { display: none; }
+      .mobile-nav { display: block; }
+      .app-header .nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header"></header>
+  <div class="dashboard">
+    <h2>Wedstrijden</h2>
+    <p class="subtitle" id="subtitle">Je race-track data</p>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-races">—</div>
+        <div class="stat-label">Wedstrijden</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-tracks">—</div>
+        <div class="stat-label">GPX-tracks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-distance">—</div>
+        <div class="stat-label">Totaal afstand (nm)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="race-list-header">
+        <span class="card-title">Race overzicht</span>
+        <div class="filter-bar">
+          <input class="input" id="search-input" placeholder="Zoek wedstrijd…" />
+        </div>
+      </div>
+
+      <div id="race-list">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Wedstrijden laden…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Wedstrijden</span>
+      </a>
+      <a href="race.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 3"/></svg>
+        <span>Race</span>
+      </a>
+      <a href="race-compare.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4h4v4"/><path d="M20 4L9 15"/><path d="M8 20H4v-4"/><path d="M4 20l7-7"/></svg>
+        <span>Vergelijk</span>
+      </a>
+    </div>
+  </nav>
+
+  <script src="js/shared.js"></script>
+  <script>
+    requireAuth();
+    renderHeader('dashboard');
+
+    let races = [];
+    let tracks = [];
+
+    async function loadData() {
+      try {
+        [races, tracks] = await Promise.all([
+          apiGet('/races') || [],
+          apiGet('/tracks') || [],
+        ]);
+
+        if (!Array.isArray(races)) races = [];
+        if (!Array.isArray(tracks)) tracks = [];
+
+        document.getElementById('stat-races').textContent = races.length;
+        document.getElementById('stat-tracks').textContent = tracks.length;
+        document.getElementById('stat-distance').textContent = '—';
+
+        const subtitle = document.getElementById('subtitle');
+        if (races.length > 0) {
+          subtitle.textContent = races.length + ' wedstrijd' + (races.length !== 1 ? 'en' : '') + ' gevonden';
+        }
+
+        renderRaces(races);
+      } catch (e) {
+        document.getElementById('race-list').innerHTML =
+          '<div class="empty-state"><p>Kon gegevens niet laden. Probeer opnieuw in te loggen.</p></div>';
+      }
+    }
+
+    function renderRaces(list) {
+      const container = document.getElementById('race-list');
+
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 28 28" fill="none" stroke="var(--muted)" stroke-width="1.5">
+              <path d="M14 3L6 18h16L14 3z"/>
+              <path d="M14 18v7"/>
+              <path d="M10 25h8"/>
+            </svg>
+            <h3>Nog geen wedstrijden</h3>
+            <p>Zodra je een race-track uploadt via de Regatta Screen app, verschijnt die hier.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(r => {
+        const name = r.name || r.label || 'Race #' + r.id;
+        const date = fmtDate(r.created_at || r.date);
+        const time = fmtTime(r.created_at);
+        const trackCount = r.track_count || '—';
+        return `
+          <div class="race-item" onclick="openRace(${r.id})">
+            <div class="race-info">
+              <div class="race-name">${escHtml(name)}</div>
+              <div class="race-meta">${date} · ${time}</div>
+            </div>
+            <div class="race-stats">
+              <div class="race-stat">
+                <div class="val">${trackCount}</div>
+                <div class="lbl">boten</div>
+              </div>
+            </div>
+            <div class="race-arrow">→</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function openRace(id) {
+      sessionStorage.setItem('raceId', id);
+      window.location.href = 'race.html';
+    }
+
+    document.getElementById('search-input').addEventListener('input', function() {
+      const q = this.value.toLowerCase();
+      const filtered = races.filter(r => {
+        const name = (r.name || r.label || '').toLowerCase();
+        return name.includes(q);
+      });
+      renderRaces(filtered);
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

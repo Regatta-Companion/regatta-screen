@@ -1,0 +1,275 @@
+/* Regatta Screen — shared design system
+   Licht Nautisch / Marine palette (serif display + sans body) */
+
+:root {
+  --bg:       oklch(97% 0.008 85);     /* warm wit canvas */
+  --surface:  oklch(100% 0 0);         /* wit */
+  --fg:       oklch(18% 0.03 260);     /* diep marine */
+  --muted:    oklch(48% 0.025 260);    /* gedempt staal */
+  --border:   oklch(88% 0.015 85);     /* warmgrijs */
+  --accent:   oklch(42% 0.14 260);     /* marineblauw */
+  --accent-light: oklch(75% 0.08 260); /* licht accent */
+  --green:    oklch(60% 0.14 145);     /* groen */
+  --amber:    oklch(68% 0.14 85);      /* amber */
+  --red:      oklch(55% 0.18 25);      /* rood */
+
+  --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Layout ──────────────────────────────────────────────── */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.app-header .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.app-header .logo svg { width: 28px; height: 28px; }
+
+.app-header .nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.app-header .nav a {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+
+.app-header .nav a:hover,
+.app-header .nav a.active {
+  color: var(--fg);
+  background: var(--border);
+  text-decoration: none;
+}
+
+.app-header .user-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.app-header .user-menu .email {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: oklch(38% 0.14 260); }
+.btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--border);
+}
+.btn-secondary:hover { background: var(--border); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border-color: transparent;
+}
+.btn-ghost:hover { color: var(--fg); background: var(--border); }
+
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+
+/* ── Cards ───────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0,10,30,0.04);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ── Status pills ─────────────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
+}
+
+.pill-green  { background: color-mix(in oklch, var(--green), transparent 88%); color: var(--green); }
+.pill-amber  { background: color-mix(in oklch, var(--amber), transparent 88%); color: var(--amber); }
+.pill-red    { background: color-mix(in oklch, var(--red), transparent 88%); color: var(--red); }
+.pill-neutral { background: var(--border); color: var(--muted); }
+
+/* ── Stats / numerals ─────────────────────────────────────── */
+.stat {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stat-lg { font-size: 28px; font-weight: 700; }
+.stat-md { font-size: 20px; font-weight: 600; }
+.stat-sm { font-size: 14px; font-weight: 500; }
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* ── Tables ───────────────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table tr:hover td { background: color-mix(in oklch, var(--border), transparent 60%); }
+
+/* ── Form fields ──────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: oklch(75% 0.01 260); }
+
+/* ── Grid helpers ─────────────────────────────────────────── */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+
+/* ── Responsive header ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-header { padding: 10px 16px; }
+  .app-header .nav { gap: 4px; }
+  .app-header .nav a { padding: 5px 10px; font-size: 12px; }
+  .app-header .user-menu .email { display: none; }
+}
+
+@media (max-width: 480px) {
+  .app-header { flex-wrap: wrap; gap: 8px; }
+  .card { padding: 14px; }
+}
