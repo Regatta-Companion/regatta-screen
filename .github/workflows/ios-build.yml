@@ -1,0 +1,45 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:  # handmatig triggeren
+
+jobs:
+  build-ios:
+    name: Build iOS (no codesign)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # CocoaPods is vereist voor iOS builds
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+        # continue-on-error omdat sommige Flutter projecten geen Podfile nodig hebben
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build iOS (unsigned)
+        run: flutter build ios --no-codesign --release
+
+      - name: Package Runner.app
+        run: |
+          cd build/ios/iphoneos
+          zip -r ../../../Runner-unsigned.zip Runner.app
+          echo "App size: $(du -sh Runner.app | cut -f1)"
+
+      - name: Upload unsigned .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: regatta-screen-ios-unsigned-${{ github.sha }}
+          path: Runner-unsigned.zip
+          retention-days: 7
