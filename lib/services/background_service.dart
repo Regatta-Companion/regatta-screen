@@ -15,7 +15,7 @@ class BackgroundServiceManager {
     final service = FlutterBackgroundService();
 
     await service.configure(
-      iosConfiguration: const IosConfiguration(
+      iosConfiguration: IosConfiguration(
         autoStart: false,
         onForeground: null,
         onBackground: null,
