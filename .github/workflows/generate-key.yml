@@ -1,0 +1,86 @@
+name: Generate Developer Key
+
+# Eenmalig: monkeyc -g genereert een nieuwe developer key en output 'm.
+# Gebruik: Manual trigger via Actions → Generate Developer Key → Run workflow.
+# Kopieer de base64 string uit de log en zet als org-secret GARMIN_DEVELOPER_KEY_B64.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-key:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Connect IQ SDK
+        run: |
+          SDK_FILE=$(curl -s https://developer.garmin.com/downloads/connect-iq/sdks/sdks.json | \
+            python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          data.sort(key=lambda s: list(map(int, s['version'].split('.'))), reverse=True)
+          print(data[0]['linux'])
+          ")
+          SDK_URL="https://developer.garmin.com/downloads/connect-iq/sdks/${SDK_FILE}"
+          echo "Downloading: ${SDK_FILE}"
+          curl -fL "$SDK_URL" -o /tmp/sdk.zip
+          unzip -q /tmp/sdk.zip -d /tmp/sdk
+          chmod +x /tmp/sdk/bin/monkeyc
+
+      - name: Create minimal device definitions
+        run: |
+          mkdir -p ~/.Garmin/ConnectIQ/Devices/fr965
+          cat > ~/.Garmin/ConnectIQ/Devices/fr965/compiler.json << 'JSON'
+          {
+            "deviceId": "fr965",
+            "displayName": "Forerunner 965",
+            "deviceFamily": "round-454x454",
+            "worldWidePartNumber": "006-B4315-00",
+            "partNumbers": [
+              { "number": "006-B4315-00", "firmwareVersion": "2502", "connectIQVersion": "5.2.0" }
+            ],
+            "resolution": { "width": 454, "height": 454 },
+            "launcherIcon": { "width": 65, "height": 65 },
+            "bitsPerPixel": 16,
+            "orientation": "GFX_ORNTN_0",
+            "gpuSupport": true,
+            "alphaBlendingSupport": true,
+            "screenRotationSupport": false,
+            "exportSupport": true,
+            "codePageSize": 4096,
+            "appTypes": [
+              { "type": "watchApp",   "memoryLimit": 786432 },
+              { "type": "watchFace",  "memoryLimit": 131072 },
+              { "type": "datafield",  "memoryLimit": 262144 },
+              { "type": "background", "memoryLimit": 65536 },
+              { "type": "glance",     "memoryLimit": 65536 }
+            ]
+          }
+          JSON
+
+      - name: Generate new developer key
+        env:
+          KEY_B64: ${{ secrets.GARMIN_DEVELOPER_KEY_B64 }}
+        run: |
+          echo "$KEY_B64" | base64 --decode > developer_key.der
+          /tmp/sdk/bin/monkeyc -g \
+            -o /tmp/dummy.prg \
+            -y developer_key.der \
+            --override-devices-json ~/.Garmin/ConnectIQ/Devices \
+            -f garmin/monkey.jungle \
+            -l 0 2>&1 || true
+          if [ -f developer_key.der ] && [ -s developer_key.der ]; then
+            SIZE=$(wc -c < developer_key.der)
+            echo "::notice::Key gegenereerd: ${SIZE} bytes"
+            echo "--- KOPIEER ONDERSTAANDE REGEL ---"
+            B64=$(base64 -w0 developer_key.der)
+            echo "GARMIN_DEVELOPER_KEY_B64=$B64"
+            echo "--- EINDE ---"
+            echo "::notice::Plak deze waarde als GARMIN_DEVELOPER_KEY_B64 org-secret"
+            echo "::notice::Regatta-Companion → Settings → Secrets and variables → Actions"
+          else
+            echo "::error::Key generatie mislukt"
+            exit 1
+          fi
